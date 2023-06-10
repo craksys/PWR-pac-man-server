@@ -6,12 +6,13 @@ PORT = 50001  # Numer portu
 
 players = {}
 champions = {}
-def add_player(player_id, nick, ip, port, state):
+def add_player(player_id, nick, ip, port, state, ready):
     players[player_id] = {
         'nick': nick,
         'ip': ip,
         'port': port,
-        'state' : state
+        'state' : state,
+        'ready' : ready
     }
 
 def add_champion(champion_id, nick, port, characterID):
@@ -40,6 +41,13 @@ def change_player_state(port, state):
             players_c.append(player_id)
             player_data['state'] = state
 
+def change_player_ready(port, ready):
+    players_c = []
+    for player_id, player_data in players.items():
+        if player_data['port'] == port:
+            players_c.append(player_id)
+            player_data['ready'] = ready
+
 def remove_player_by_port(port):
     players_to_remove = []
     for player_id, player_data in players.items():
@@ -47,6 +55,14 @@ def remove_player_by_port(port):
             players_to_remove.append(player_id)
     for player_id in players_to_remove:
         del players[player_id]
+
+def remove_champion_by_port(port):
+    champions_to_remove = []
+    for player_id, player_data in players.items():
+        if player_data['port'] == port:
+            champions_to_remove.append(player_id)
+    for player_id in champions_to_remove:
+        del champions[player_id]
 
 def handle_client(connection, address):
     try:
@@ -109,6 +125,7 @@ def pick_champion(connection, address, message):
         handle_client(connection, address) #return
     finally:
         remove_player_by_port(address[1])
+        remove_champion_by_port(address[1])
         connection.close()
 
 

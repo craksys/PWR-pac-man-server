@@ -2,6 +2,8 @@ class Lobby:
     def __init__(self, data):
         self.data = data
 
+
+
     def handle_client(self, connection, address):
         try:
             while True:
@@ -9,7 +11,7 @@ class Lobby:
                 if not data:
                     break
                 message = data.decode('utf-8')  # Dekodowanie danych z bajtów na string
-                if message.startswith("SetMyNickname(") and self.data.return_player_state(address[1]) == -1:
+                if message.startswith("SetMyNickname(") and self.data.return_player_state(address[1]) == -1 and len(self.data.players) <= 4:
                     self.set_nickname(connection, address, message)
                 elif message.startswith("PickChampion(") and self.data.return_player_state(address[1]) == 0:
                     self.pick_champion(connection, address, message)
@@ -17,9 +19,18 @@ class Lobby:
                     self.set_ready(connection, address, message)
                 elif message.startswith("SetNotReady()") and self.data.return_player_state(address[1]) == 1:
                     self.set_not_ready(connection, address, message)
+                elif message.startswith("isStarted()") and self.data.return_player_state(address[1]) == 1 and self.data.check_players_ready():
+                    response = "Started()"
+                    connection.send(response.encode('utf-8'))
+                    self.data.change_player_state(address[1], 2)
+                elif message.startswith("isStarted()") and self.data.return_player_state(address[1]) == 1 and not self.data.check_players_ready():
+                    response = "NotStarted()"
+                    connection.send(response.encode('utf-8'))
                 else:
                     response = "Command Not Found!"
                     connection.send(response.encode('utf-8'))
+                print(self.data.players)
+                print(self.data.champions)
         finally:
             self.data.remove_player_by_port(address[1])
             connection.close()
@@ -37,7 +48,7 @@ class Lobby:
                 response = "BadNickname(TooLongOrShort);"
                 connection.send(response.encode('utf-8'))
             else:
-                self.data.add_player(len(self.data.players), extracted_nickname, address[0], address[1], 0, False)
+                self.data.add_player(len(self.data.players), extracted_nickname, address[0], address[1], 0)
                 response = "StartCharacterLobby();"
                 connection.send(response.encode('utf-8'))
                 print(self.data.players)
@@ -61,7 +72,7 @@ class Lobby:
                 connection.send(response.encode('utf-8'))
             else:
                 response = "StartReadyLobby();"
-                self.data.add_champion(len(self.data.champions), self.data.return_nick_by_port(address[1]), address[1], extracted_champion)
+                self.data.add_champion(len(self.data.champions), self.data.return_nick_by_port(address[1]), address[1], extracted_champion, False)
                 connection.send(response.encode('utf-8'))
                 self.data.change_player_state(address[1], 1)
                 print(self.data.players)
@@ -76,8 +87,9 @@ class Lobby:
         try:
             response = "Ready();"
             connection.send(response.encode('utf-8'))
-            self.data.change_player_ready(address[1],True)
+            self.data.change_champion_ready(address[1],True)
             print(self.data.players)
+            print(self.data.champions)
             self.handle_client(connection, address)  # return
         finally:
             self.data.remove_player_by_port(address[1])
@@ -88,7 +100,7 @@ class Lobby:
         try:
             response = "NotReady();"
             connection.send(response.encode('utf-8'))
-            self.data.change_player_ready(address[1],False)
+            self.data.change_champion_ready(address[1],False)
             print(self.data.players)
             self.handle_client(connection, address)  # return
         finally:

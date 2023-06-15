@@ -2,20 +2,20 @@ class Data:
     players = {}
     champions = {}
 
-    def add_player(self, player_id, nick, ip, port, state, ready):
+    def add_player(self, player_id, nick, ip, port, state):
         Data.players[player_id] = {
             'nick': nick,
             'ip': ip,
             'port': port,
-            'state': state,
-            'ready': ready
+            'state': state
         }
 
-    def add_champion(self, champion_id, nick, port, characterID):
+    def add_champion(self, champion_id, nick, port, characterID, ready):
         Data.champions[champion_id] = {
             'nick': nick,
             'port': port,
-            'characterID': characterID
+            'characterID': characterID,
+            'ready' : ready
         }
 
     def check_characterID_in_champions(self, characterID):
@@ -39,9 +39,9 @@ class Data:
                 players_c.append(player_id)
                 player_data['state'] = state
 
-    def change_player_ready(self, port, ready):
+    def change_champion_ready(self, port, ready):
         players_c = []
-        for player_id, player_data in Data.players.items():
+        for player_id, player_data in Data.champions.items():
             if player_data['port'] == port:
                 players_c.append(player_id)
                 player_data['ready'] = ready
@@ -68,3 +68,14 @@ class Data:
             if player_data['port'] == port:
                 players_c.append(player_id)
                 return player_data['nick']
+
+    def check_players_ready(self):
+        if len(self.champions) < 2:
+            return False
+
+        for player in self.champions.values():
+            print(player['ready'])
+            if not player['ready']:
+                return False
+
+        return True

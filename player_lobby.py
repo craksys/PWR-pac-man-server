@@ -71,7 +71,7 @@ class Lobby:
                 response = "BadChampion(invalidChampion);"
                 connection.send(response.encode('utf-8'))
             else:
-                response = "StartReadyLobby();"
+                response = "StartReadyLobby(" + self.data.return_nick_by_port(address[1]) + "," + extracted_champion + ");"
                 self.data.add_champion(len(self.data.champions), self.data.return_nick_by_port(address[1]), address[1], extracted_champion, False)
                 connection.send(response.encode('utf-8'))
                 self.data.change_player_state(address[1], 1)
